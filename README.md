@@ -1,6 +1,6 @@
 # Geoblocks mapboxlayer
 
-[DEMO](https://geoblocks.github.io/mapboxlayer/demo.html)
+[DEMO](https://geoblocks.github.io/mapboxlayer-legacy/demo.html)
 
 ## Publish a new version to npm
 
