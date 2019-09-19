@@ -7,13 +7,11 @@ import View from 'ol/View.js';
 import TileLayer from 'ol/layer/Tile.js';
 import {OSM, TileDebug} from 'ol/source.js';
 
-import MapBoxLayer from '../src/MapBoxLayer.js';
+import MapBoxLayer, {MapBoxLayerRenderer} from '../src/MapBoxLayer.js';
 
 const mapBoxStyle = 'https://vectortiles-staging.geoportail.lu/styles/roadmap/style.json'
 
-const osmSource = new OSM();
-
-window.map = new Map({
+const map = window.map = new Map({
   layers: [
     window.mbl = new MapBoxLayer({
       style: mapBoxStyle,
@@ -22,7 +20,7 @@ window.map = new Map({
     new TileLayer({
       source: new TileDebug({
         projection: 'EPSG:3857',
-        tileGrid: osmSource.getTileGrid()
+        tileGrid: new OSM().getTileGrid()
       })
     })
   ],
@@ -32,3 +30,7 @@ window.map = new Map({
     zoom: 10
   })
 });
+
+map.getRenderer().registerLayerRenderers([
+  MapBoxLayerRenderer
+]);

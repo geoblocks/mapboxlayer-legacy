@@ -3,9 +3,82 @@ import {toDegrees} from 'ol/math';
 import {toLonLat} from 'ol/proj.js';
 
 import mapboxgl from 'mapbox-gl';
+import Observable from 'ol/Observable';
 
 
-export default class MapBox extends Layer {
+export class MapBoxLayerRenderer extends Observable {
+
+  /**
+   * @param {MapBoxLayer} layer
+   */
+  constructor(layer) {
+    super();
+    this.layer = layer;
+  }
+
+  /**
+   * Determine if this renderer handles the provided layer.
+   * @param {import("ol/layer/Layer.js").default} layer The candidate layer.
+   * @return {boolean} The renderer can render the layer.
+   */
+  static handles(layer) {
+    return layer instanceof MapBoxLayer;
+  }
+
+  /**
+   * Create a layer renderer.
+   * @param {import("../Map.js").default} mapRenderer The map renderer.
+   * @param {import("../../layer/Layer.js").default} layer The layer to be rendererd.
+   * @return {CanvasImageLayerRenderer} The layer renderer.
+   */
+  static create(mapRenderer, layer) {
+    return new MapBoxLayerRenderer(/** @type {MapBoxLayer} */ (layer));
+  }
+
+  /**
+   * @param {import('ol/PluggableMap.js').FrameState} frameState
+   */
+  prepareFrame(frameState) {
+    const layer = this.layer;
+    const mapboxMap = this.layer.mapboxMap;
+    const canvas = mapboxMap.getCanvas();
+    const viewState = frameState.viewState;
+
+    const visible = layer.getVisible();
+    canvas.style.display = visible ? 'block' : 'none';
+
+    const opacity = layer.getOpacity().toString();
+    if (opacity !== canvas.style.opacity) {
+      canvas.style.opacity = opacity;
+    }
+
+    // adjust view parameters in mapbox
+    const rotation = viewState.rotation;
+    if (rotation) {
+      mapboxMap.rotateTo(toDegrees(-rotation), {
+        animate: false
+      });
+    }
+    mapboxMap.jumpTo({
+      center: toLonLat(viewState.center),
+      zoom: viewState.zoom - 1,
+      animate: false
+    });
+
+    // cancel the scheduled update & trigger synchronous redraw
+    // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
+    // NOTE: THIS MIGHT BREAK WHEN UPDATING MAPBOX
+    if (mapboxMap._frame) {
+      mapboxMap._frame.cancel();
+      mapboxMap._frame = null;
+    }
+    mapboxMap._render();
+
+    return false; // never call compose
+  }
+}
+
+export default class MapBoxLayer extends Layer {
 
   constructor(options) {
 
@@ -20,7 +93,7 @@ export default class MapBox extends Layer {
       mapboxgl.accessToken = options.accessToken;
     }
 
-    this.map_ = new mapboxgl.Map({
+    this.mapboxMap = new mapboxgl.Map({
       container: options.container,
       style: options.style,
       attributionControl: false,
@@ -36,41 +109,8 @@ export default class MapBox extends Layer {
     });
   }
 
-  render(frameState) {
-    const canvas = this.map_.getCanvas();
-    const viewState = frameState.viewState;
-
-    const visible = this.getVisible();
-    canvas.style.display = visible ? 'block' : 'none';
-
-    const opacity = this.getOpacity().toString();
-    if (opacity !== canvas.style.opacity) {
-      canvas.style.opacity = opacity;
-    }
-
-    // adjust view parameters in mapbox
-    const rotation = viewState.rotation;
-    if (rotation) {
-      this.map_.rotateTo(toDegrees(-rotation), {
-        animate: false
-      });
-    }
-    this.map_.jumpTo({
-      center: toLonLat(viewState.center),
-      zoom: viewState.zoom - 1,
-      animate: false
-    });
-
-    // cancel the scheduled update & trigger synchronous redraw
-    // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
-    // NOTE: THIS MIGHT BREAK WHEN UPDATING MAPBOX
-    if (this.map_._frame) {
-      this.map_._frame.cancel();
-      this.map_._frame = null;
-    }
-    this.map_._render();
-
-    return canvas;
+  getSourceState() {
+    return 'ready';
   }
 
   /**
@@ -78,7 +118,6 @@ export default class MapBox extends Layer {
    * @param {boolean} visible
    */
   setLayerVisibility(name, visible) {
-    this.map_.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
+    this.mapboxMap.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
   }
-
 }
