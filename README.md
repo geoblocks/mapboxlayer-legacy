@@ -6,6 +6,5 @@
 
 ```bash
 npm version patch
-npm publish
-git push --tags origin master
+npm run build && npm publish && git push --tags origin master
 ```
