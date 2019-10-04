@@ -115,7 +115,7 @@ export default class MapBoxLayer extends Layer {
    * @override
    */
   getType() {
-    return 'VECTOR_TILE';
+    return 'GEOBLOCKS_MVT';
   }
 
   getXYZ() {
