@@ -9,11 +9,13 @@ import {OSM, TileDebug} from 'ol/source.js';
 
 import MapBoxLayer, {MapBoxLayerRenderer} from '../src/MapBoxLayer.js';
 
-const mapBoxStyle = 'https://vectortiles-staging.geoportail.lu/styles/roadmap/style.json'
+const mapBoxStyle = 'https://vectortiles-staging.geoportail.lu/styles/roadmap/style.json';
+const xyz = 'https://vectortiles-staging.geoportail.lu/styles/roadmap/{z}/{x}/{y}.png';
 
 const map = window.map = new Map({
   layers: [
     window.mbl = new MapBoxLayer({
+      xyz,
       style: mapBoxStyle,
       container: 'map'
     }),

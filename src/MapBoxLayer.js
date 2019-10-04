@@ -97,6 +97,7 @@ export default class MapBoxLayer extends Layer {
 
     this.container_ = options.container;
     this.style_ = options.style;
+    this.xyz_ = options.xyz;
 
     /**
      * @type {mapboxgl.Map}
@@ -107,6 +108,18 @@ export default class MapBoxLayer extends Layer {
     this.on('change:visible', evt => {
       this.updateVisibility_();
     });
+  }
+
+
+  /**
+   * @override
+   */
+  getType() {
+    return 'VECTOR_TILE';
+  }
+
+  getXYZ() {
+    this.xyz_;
   }
 
   /**
