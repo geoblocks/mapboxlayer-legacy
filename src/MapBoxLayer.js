@@ -119,7 +119,7 @@ export default class MapBoxLayer extends Layer {
   }
 
   getXYZ() {
-    this.xyz_;
+    return this.xyz_;
   }
 
   /**
